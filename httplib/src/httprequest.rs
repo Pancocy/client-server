@@ -1,4 +1,12 @@
 use std::collections::HashMap;
+
+/// into方法依赖与对变量声明的类型是否存在from trait
+/// # Example
+///```
+///    use httplib::httprequest::Methods;
+///    let x_method : Methods = "GET".into();
+///    assert_eq!(Methods::Get , x_method)
+/// ```
 #[warn(dead_code)]
 //定义请求方法的枚举,并且需要为它实现三个trait：From,
 #[derive(Debug,PartialEq)]
@@ -7,7 +15,6 @@ pub enum Methods{
     Post,
     Uninitialized
 }
-
 impl From<&str> for Methods{
     fn from(s: &str) -> Methods {
         match s {
@@ -17,7 +24,6 @@ impl From<&str> for Methods{
         }
     }
 }
-
 //定义请求http版本的枚举
 #[derive(Debug,PartialEq)]
 pub enum Version {
@@ -33,12 +39,10 @@ impl From<&str> for Version{
         }
     }
 }
-
 #[derive(Debug,PartialEq)]
 pub enum Resource{
     Path(String)
 }
-
 //定义请求结构体
 pub struct HttpRequest{
     pub method : Methods,
@@ -47,7 +51,6 @@ pub struct HttpRequest{
     pub resource: Resource,
     pub body:String
 }
-
 impl From<String> for HttpRequest{
     fn from(value: String) -> Self {
         let mut parsed_method = Methods::Uninitialized;
@@ -78,10 +81,8 @@ impl From<String> for HttpRequest{
         }
     }
 }
-
 fn process_req_line(line: &str) -> (Methods,Version,Resource) {
     let mut line  = line.split_whitespace();
-
     //这的顺序非常重要！！
     let  method = line.next().unwrap();
     let  resource = line.next().unwrap();
@@ -94,7 +95,6 @@ fn process_req_line(line: &str) -> (Methods,Version,Resource) {
     )
 
 }
-
 fn process_header_line (line:&str) -> (String,String) {
     let mut line = line.split(":");
     let mut key  = String::from("");
@@ -108,10 +108,10 @@ fn process_header_line (line:&str) -> (String,String) {
     }
     (key,value)
 }
-
 #[cfg(test)]
 mod test{
     use super::*;
+
     #[test]
     fn test_method_work(){
         let x : Methods = "GET".into();
@@ -119,9 +119,13 @@ mod test{
     }
 
     #[test]
-    fn test_version_work(){
+    fn test_base_work() {
         let x :Version = "HTTP/1.1".into();
-        assert_eq!(Version::V1_1,x)
+        assert_eq!(Version::V1_1, x);
+
+        let y: Methods = "GET".into();
+        assert_eq!(Methods::Get, y);
+
     }
 
     #[test]
@@ -134,6 +138,7 @@ mod test{
         expected_header.insert("Accept".into(),"*".into());
 
         let value:HttpRequest =  line.into();
+
 
         assert_eq!(Methods::Get,value.method);
         assert_eq!(Version::V1_1,value.version);
