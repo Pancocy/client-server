@@ -1,8 +1,6 @@
 //构建http响应体的struct
 use std::collections::HashMap;
-use std::io::{Read, Write};
-use std::str;
-
+use std::io::{Write};
 /*为其实现三个trait*/
 #[derive(Debug,PartialEq,Clone)]
 pub struct HttpResponse<'a> {
@@ -29,11 +27,12 @@ impl <'a> From<HttpResponse<'a>> for String {
     fn from(response: HttpResponse<'a>) -> String {
         let result = response.clone();
         format!(
-            "{} \r\n, {} \r\n,{} \r\n,{} \r\n,{}",
+            "{}\r\n{} {}\r\n{}Content-Length: {}\r\n{}",
             result.version(),
             result.status_code(),
             result.reason_phrase(),
             result.headers(),
+            response.body.unwrap().len(),
             result.body(),
         )
     }
@@ -41,6 +40,7 @@ impl <'a> From<HttpResponse<'a>> for String {
 
 //实现new 方法
 impl <'a> HttpResponse<'a> {
+    //实现new放方法
     pub fn new(
         status_code: u16,
         headers: Option<HashMap<&'a str,&'a str>>,
@@ -69,53 +69,47 @@ impl <'a> HttpResponse<'a> {
             response.body = body;
             response
         }
-    }
-//实现send方法
-impl <'a> HttpResponse<'a> {
-        pub fn send(&self, stream: &mut (impl Write + Read)) -> String {
-            let res = self.clone();
-            let res_string = String::from(res);
-                stream.write(res_string.as_bytes()).unwrap();
-                let mut buffer = [0,128];
-                stream.read(&mut buffer).unwrap();
-                let rest = str::from_utf8(&buffer).unwrap();
-                rest;
-        }
-        fn version(&self) -> &str {
-            self.version
-        }
-        fn status_code(&self) -> u16 {
-            self.status_code
-        }
-        fn reason_phrase(&self) -> &str {
-            self.reason_phrase
-        }
-        pub fn headers(&self) -> String {
-            let map = self.headers.clone().unwrap();
-            let mut header_string = String::from("").into();
-            for (key, value) in map.iter() {
-                header_string = format!("{}{}: {}\r\n", header_string, key, value);
-            };
-            header_string
-        }
-        pub fn body(&self) -> &str {
-            match &self.body {
-                Some(b) => b.as_str(),
-                None => "",
-            }
-        }
+    //实现send方法
+    pub fn send(&self, stream: &mut impl Write) -> Result<(), ()>{
+        let response = self.clone();
+        let res_string = String::from(response);
+        let _ = write!(stream, "{}", res_string);
+        Ok(())
     }
 
+
+    //返回响应体各个部分的方法
+    fn version(&self) -> &str {
+        self.version
+    }
+    fn status_code(&self) -> u16 {
+        self.status_code
+    }
+    fn reason_phrase(&self) -> &str {
+        self.reason_phrase
+    }
+    pub fn headers(&self) -> String {
+        let map = self.headers.clone().unwrap();
+        let mut header_string = String::from("").into();
+        for (key, value) in map.iter() {
+            header_string = format!("{}{}: {}\r\n", header_string, key, value);
+        };
+        header_string
+    }
+    pub fn body(&self) -> &str {
+        match &self.body {
+            Some(b) => b.as_str(),
+            None => "",
+        }
+    }
+}
 
 #[cfg(test)]
 mod test{
-    use std::net::TcpStream;
-    use std::str;
-
     use super::*;
 
     #[test]
-    fn test_new_response(){
+    fn test_new_response_404(){
         let response = HttpResponse::new(
             404,
             None,
@@ -127,20 +121,29 @@ mod test{
         assert_eq!(response.headers(),"Content-Type: text/html\r\n");
         assert_eq!(response.body(),"Hello, World!");
     }
+    #[test]
+    fn test_new_response_200(){
+        let response = HttpResponse::new(
+            200,
+            None,
+            Some("Hello, World!".to_string()),
+        );
+        assert_eq!(response.version(),"HTTP/1.1");
+        assert_eq!(response.status_code(),200);
+        assert_eq!(response.reason_phrase(),"OK");
+        assert_eq!(response.headers(),"Content-Type: text/html\r\n");
+        assert_eq!(response.body(),"Hello, World!");
+    }
 
     #[test]
-    fn test_send_response(){
-        let mut stream = TcpStream::connect("localhost:3000").unwrap();
+    fn test_response_to_string(){
         let response = HttpResponse::new(
             404,
             None,
             Some("Hello, World!".to_string()),
         );
-        let result = response.send(&mut stream).unwrap();
-
-        assert_eq!(str::from_utf8(response).unwrap(),result)
-
-
+        let response_string:String= response.into();
+        assert_eq!(response_string,"HTTP/1.1\r\n404 Not Found\r\nContent-Type: text/html\r\nContent-Length: 13\r\nHello, World!")
     }
 }
 
