@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-/// into方法依赖与对变量声明的类型是否存在from trait
+/// into方法依赖与对变量声明的类型是否存在from trait;
 /// # Example
 ///```
 ///    use httplib::httprequest::Methods;

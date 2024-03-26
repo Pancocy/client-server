@@ -1,6 +1,7 @@
 //构建http响应体的struct
 use std::collections::HashMap;
-use std::io::{Write};
+use std::io::Write;
+
 /*为其实现三个trait*/
 #[derive(Debug,PartialEq,Clone)]
 pub struct HttpResponse<'a> {
@@ -22,7 +23,6 @@ impl <'a> Default for HttpResponse<'a> {
         }
     }
 }
-
 impl <'a> From<HttpResponse<'a>> for String {
     fn from(response: HttpResponse<'a>) -> String {
         let result = response.clone();
@@ -37,7 +37,6 @@ impl <'a> From<HttpResponse<'a>> for String {
         )
     }
 }
-
 //实现new 方法
 impl <'a> HttpResponse<'a> {
     //实现new放方法
@@ -76,8 +75,6 @@ impl <'a> HttpResponse<'a> {
         let _ = write!(stream, "{}", res_string);
         Ok(())
     }
-
-
     //返回响应体各个部分的方法
     fn version(&self) -> &str {
         self.version
