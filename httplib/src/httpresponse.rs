@@ -27,12 +27,11 @@ impl <'a> From<HttpResponse<'a>> for String {
     fn from(response: HttpResponse<'a>) -> String {
         let result = response.clone();
         format!(
-            "{}\r\n{} {}\r\n{}Content-Length: {}\r\n{}",
+            "{}\r\n{} {}\r\n{}\r\n{}",
             result.version(),
             result.status_code(),
             result.reason_phrase(),
             result.headers(),
-            response.body.unwrap().len(),
             result.body(),
         )
     }
@@ -48,8 +47,8 @@ impl <'a> HttpResponse<'a> {
             let mut response = HttpResponse::default();
             if status_code != 200 {
                 response.status_code = status_code
-                };
-            response.reason_phrase = match status_code {
+            };
+            response.reason_phrase = match response.status_code {
                 200 => "OK",
                 404 => "Not Found",
                 500 => "Internal Server Error",
