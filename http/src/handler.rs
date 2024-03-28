@@ -78,7 +78,6 @@ impl Handler for WebServiceHandler{
     fn handle(req: &HttpRequest) -> HttpResponse {
         let httplib::httprequest::Resource::Path(s) = &req.resource;
         let route:Vec<&str> = s.split("/").collect();
-        println!("Resource_Route:{:?}",route);
         match route[2] {
             "shipping" if route.len() > 2 && route[3] == "order" => {
                 let mut map = HashMap::new();

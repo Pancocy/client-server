@@ -27,7 +27,7 @@ impl <'a> From<HttpResponse<'a>> for String {
     fn from(response: HttpResponse<'a>) -> String {
         let result = response.clone();
         format!(
-            "{}\r\n{} {}\r\n{}\r\n{}",
+            "{} {} {}\r\n{}\r\n{}",
             result.version(),
             result.status_code(),
             result.reason_phrase(),
@@ -71,6 +71,7 @@ impl <'a> HttpResponse<'a> {
     pub fn send(&self, stream: &mut impl Write) -> Result<(), ()>{
         let response = self.clone();
         let res_string = String::from(response);
+        println!("response:\r\n{}",res_string);
         let _ = write!(stream, "{}", res_string);
         Ok(())
     }

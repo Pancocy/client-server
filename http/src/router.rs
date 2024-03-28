@@ -12,7 +12,7 @@ impl Router{
             httplib::httprequest::Methods::Get =>   match req.resource {
                 Resource::Path(ref s) => {
                     let route:Vec<&str> = s.split("/").collect();
-                    println!("{:?}",route);
+                    println!("Route:\r\n{:?}",route);
                     match route[1] {
                         "api" => {
                             let resp:HttpResponse = WebServiceHandler::handle(&req);

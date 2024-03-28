@@ -44,6 +44,7 @@ pub enum Resource{
     Path(String)
 }
 //定义请求结构体
+#[derive(Debug)]
 pub struct HttpRequest{
     pub method : Methods,
     pub version: Version,
